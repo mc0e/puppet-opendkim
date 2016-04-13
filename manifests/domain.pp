@@ -28,20 +28,28 @@
 #
 
 define opendkim::domain(
-  $private_key,
-  $domain      = $name,
-  $selector    = 'mail',
-  $key_folder  = '/etc/dkim',
-  $signing_key = $name,
-  $user        = $opendkim::params::user,
+  $private_key_source  = undef,
+  $private_key_content = undef,
+  $domain              = $name,
+  $selector            = 'mail',
+  $key_folder          = '/etc/dkim',
+  $signing_key         = $name,
+  $user                = $opendkim::params::user,
 ) {
-  $key_file = "${key_folder}/$selector-${domain}.key"
+
+  if (empty($private_key_source) and empty($private_key_content)) {
+    fail('one of private_key_source or private_key_content must be not empty!')
+  }
+
+  $key_file = "${key_folder}/${selector}-${domain}.key"
 
   file { $key_file:
-      owner  => $user,
-      group  => 'root',
-      mode   => 0600,
-      source => $private_key;
+      ensure  => file,
+      owner   => $user,
+      group   => 'root',
+      mode    => '0600',
+      source  => $private_key_source,
+      content => $private_key_content;
   }
 
   # Add keytable and signing table to config, but only once
@@ -60,7 +68,7 @@ define opendkim::domain(
   }
   concat::fragment{ "keytable_${name}":
     target  => '/etc/opendkim_keytable.conf',
-    content => "${selector}._domainkey.${domain} ${domain}:${selector}:$key_file\n",
+    content => "${selector}._domainkey.${domain} ${domain}:${selector}:${key_file}\n",
     order   => 10,
     require => File[$key_file],
   }

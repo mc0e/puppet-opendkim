@@ -31,6 +31,10 @@
 #   signatures.
 #   String, default is 'From'
 #
+# [*internalhosts*]
+#   Hosts from which mail should be signed rather than verified.
+#   Array, default is ['127.0.0.1']
+#
 # === Examples
 #
 #  Not called explicitly; referenced by opendkim init and config modules.
@@ -42,9 +46,10 @@
 #
 class opendkim::params {
   $syslog = 'yes'
-  $syslog_success = 'false'
+  $syslog_success = false
   $umask  = '002'
   $oversignheaders = 'From'
+  $internalhosts = ['127.0.0.1']
 
   case $::operatingsystem {
     'Ubuntu', 'Debian': {
